@@ -25,72 +25,76 @@ class PKPass
 {
     /**
      * Holds the path to the certificate
-     * Variable: string.
+     * @var string $certPath
      */
-    protected $certPath;
+    protected string $certPath;
 
     /**
      * Name of the downloaded file.
+     * @var string $name
      */
-    protected $name;
+    protected string $name;
 
     /**
      * Holds the files to include in the .pkpass
-     * Variable: array.
+     * @var string[] $files
      */
-    protected $files = [];
+    protected array $files = [];
 
     /**
      * Holds the remote file urls to include in the .pkpass
-     * Variable: array.
+     * @var string[] $remote_file_urls
      */
-    protected $remote_file_urls = [];
+    protected array $remote_file_urls = [];
 
     /**
      * Holds the json
-     * Variable: class.
+     * @var string $json supposed to be a json object
      */
-    protected $json;
+    protected string $json;
 
     /**
      * Holds the SHAs of the $files array
-     * Variable: array.
+     * @var string[] $shas
      */
-    protected $shas;
+    protected array $shas;
 
     /**
      * Holds the password to the certificate
-     * Variable: string.
+     * @var string $certPass
      */
-    protected $certPass = '';
+    protected string $certPass = '';
 
     /**
      * Holds the path to the WWDR Intermediate certificate
-     * Variable: string.
+     * @var string $wwdrCertPath
      */
-    protected $wwdrCertPath = '';
+    protected string $wwdrCertPath = '';
 
     /**
      * Holds the path to a temporary folder with trailing slash.
+     * @var string $tempPath
      */
-    protected $tempPath;
+    protected string $tempPath;
 
     /**
      * Holds error info if an error occurred.
+     * @var string $errorMessage
      */
-    private $sError = '';
+    private string $errorMessage = '';
 
     /**
-     * Holds a auto-generated uniqid to prevent overwriting other processes pass
+     * Holds an auto-generated uniqid to prevent overwriting other processes pass
      * files.
+     * @var string $uniqid
      */
-    private $uniqid = null;
+    private string $uniqid = '';
 
     /**
      * Holds array of localization details
-     * Variable: array.
+     * @var string[] $locales
      */
-    protected $locales = [];
+    protected array $locales = [];
 
     /**
      * PKPass constructor.
@@ -124,7 +128,7 @@ class PKPass
      *
      * @return bool
      */
-    public function setCertificate($path)
+    public function setCertificate($path): bool
     {
         $this->certPath = $path;
 
@@ -136,13 +140,13 @@ class PKPass
      * Parameter: string, password to the certificate
      * Return: boolean, always true.
      *
-     * @param $p
+     * @param $certificatePassword
      *
      * @return bool
      */
-    public function setCertificatePassword($p)
+    public function setCertificatePassword($certificatePassword): bool
     {
-        $this->certPass = $p;
+        $this->certPass = $certificatePassword;
 
         return true;
     }
@@ -156,7 +160,7 @@ class PKPass
      *
      * @return bool
      */
-    public function setWWDRcertPath($path)
+    public function setWWDRCertificatePath($path): bool
     {
         $this->wwdrCertPath = $path;
 
@@ -169,7 +173,7 @@ class PKPass
      * @param string $path Path to temporary directory
      * @return bool
      */
-    public function setTempPath($path)
+    public function setTempPath(string $path): bool
     {
         if(is_dir($path)) {
             $this->tempPath = rtrim($path, '/') . '/';
@@ -188,7 +192,7 @@ class PKPass
      * @param string|array $json
      * @return bool
      */
-    public function setJSON($json)
+    public function setJSON($json): bool
     {
         return $this->setData($json);
     }
@@ -196,28 +200,12 @@ class PKPass
     /**
      * Set pass data.
      *
-     * @param string|array $data
+     * @param array $data
      * @return bool
      */
-    public function setData($data)
+    public function setData(array $data): bool
     {
-        // Array is passed as input
-        if(is_array($data)) {
-            $this->json = json_encode($data);
-
-            return true;
-        }
-
-        // JSON string is passed as input
-        if(json_decode($data) !== false) {
-            $this->json = $data;
-
-            return true;
-        }
-
-        $this->sError = 'This is not a JSON string.';
-
-        return false;
+        return $this->json = json_encode($data);
     }
 
     /**
@@ -228,10 +216,10 @@ class PKPass
      *     (default is equal to [])
      * @return bool
      */
-    public function addLocaleStrings($language, $strings = [])
+    public function addLocaleStrings(string $language, array $strings = []): bool
     {
         if(!is_array($strings) || empty($strings)) {
-            $this->sError = "Translation strings empty or not an array";
+            $this->errorMessage = "Translation strings empty or not an array";
 
             return false;
         }
@@ -249,11 +237,11 @@ class PKPass
      *
      * @param string $language language for which file to be added
      * @param string $path Path to file
-     * @param string $name Filename to use in pass archive
+     * @param string|null $name Filename to use in pass archive
      *     (default is equal to $path)
      * @return bool
      */
-    public function addLocaleFile($language, $path, $name = null)
+    public function addLocaleFile(string $language, string $path, string $name = null): bool
     {
         if(file_exists($path)) {
             $name = ($name === null) ? basename($path) : $name;
@@ -262,7 +250,7 @@ class PKPass
             return true;
         }
 
-        $this->sError = sprintf('File %s does not exist.', $path);
+        $this->errorMessage = sprintf('File %s does not exist.', $path);
 
         return false;
     }
@@ -271,11 +259,11 @@ class PKPass
      * Add a file to the file array.
      *
      * @param string $path Path to file
-     * @param string $name Filename to use in pass archive
+     * @param string|null $name Filename to use in pass archive
      *     (default is equal to $path)
      * @return bool
      */
-    public function addFile($path, $name = null)
+    public function addFile(string $path, string $name = null)
     {
         if(file_exists($path)) {
             $name = ($name === null) ? basename($path) : $name;
@@ -284,7 +272,7 @@ class PKPass
             return true;
         }
 
-        $this->sError = sprintf('File %s does not exist.', $path);
+        $this->errorMessage = sprintf('File %s does not exist.', $path);
 
         return false;
     }
@@ -293,28 +281,28 @@ class PKPass
      * Add a file from a url to the remote file urls array.
      *
      * @param string $url URL to file
-     * @param string $name Filename to use in pass archive
+     * @param string|null $name Filename to use in pass archive
      *     (default is equal to $url)
      * @return bool
      */
-    public function addRemoteFile($url, $name = null)
+    public function addRemoteFile(string $url, string $name = null): bool
     {
       $name = ($name === null) ? basename($url) : $name;
       $this->remote_file_urls[$name] = $url;
 
       return true;
     }
-    
+
     /**
      * Add a locale file from a url to the remote file urls array.
      *
      * @param string $language language for which file to be added
      * @param string $url URL to file
-     * @param string $name Filename to use in pass archive
+     * @param string|null $name Filename to use in pass archive
      *     (default is equal to $url)
      * @return bool
      */
-    public function addLocaleRemoteFile($language, $url, $name = null)
+    public function addLocaleRemoteFile(string $language, string $url, string $name = null): bool
     {
       $name = ($name === null) ? basename($url) : $name;
       $this->remote_file_urls[$language .'.lproj/'. $name] = $url;
@@ -323,6 +311,8 @@ class PKPass
     }
 
     /**
+     * TODO remove boolean return
+     *
      * Create the actual .pkpass file.
      *
      * @param bool $output Whether to output it directly or return the pass
@@ -330,7 +320,7 @@ class PKPass
      *
      * @return bool|string
      */
-    public function create($output = false)
+    public function create(bool $output = false)
     {
         $paths = $this->getTempPaths();
 
@@ -356,7 +346,7 @@ class PKPass
 
         // Check if pass is created and valid
         if(!file_exists($paths['pkpass']) || filesize($paths['pkpass']) < 1) {
-            $this->sError = 'Error while creating pass.pkpass. Check your ZIP extension.';
+            $this->errorMessage = 'Error while creating pass.pkpass. Check your ZIP extension.';
             $this->clean();
 
             return false;
@@ -399,9 +389,9 @@ class PKPass
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
@@ -421,11 +411,11 @@ class PKPass
      */
     public function checkError(&$error)
     {
-        if(trim($this->sError) == '') {
+        if(trim($this->errorMessage) == '') {
             return false;
         }
 
-        $error = $this->sError;
+        $error = $this->errorMessage;
 
         return true;
     }
@@ -435,15 +425,16 @@ class PKPass
      */
     public function getError()
     {
-        return $this->sError;
+        return $this->errorMessage;
     }
 
     /**
      * Sub-function of create()
      * This function creates the hashes for the files and adds them into a json
      * string.
+     * @return string
      */
-    protected function createManifest()
+    protected function createManifest(): string
     {
         // Creates SHA hashes for all files in package
         $this->shas['pass.json'] = sha1($this->json);
@@ -469,15 +460,13 @@ class PKPass
         }
 
         if(!$has_icon) {
-            $this->sError = 'Missing required icon.png file.';
+            $this->errorMessage = 'Missing required icon.png file.';
             $this->clean();
 
             return false;
         }
 
-        $manifest = json_encode((object)$this->shas);
-
-        return $manifest;
+        return json_encode((object)$this->shas);
     }
 
     /**
@@ -489,7 +478,7 @@ class PKPass
      *
      * @return string
      */
-    protected function convertPEMtoDER($signature)
+    protected function convertPEMtoDER($signature): string
     {
         $begin = 'filename="smime.p7s"';
         $end = '------';
@@ -511,21 +500,21 @@ class PKPass
      *
      * @return bool
      */
-    protected function createSignature($manifest)
+    protected function createSignature($manifest): bool
     {
         $paths = $this->getTempPaths();
 
         file_put_contents($paths['manifest'], $manifest);
 
         if(!$pkcs12 = file_get_contents($this->certPath)) {
-            $this->sError = 'Could not read the certificate';
+            $this->errorMessage = 'Could not read the certificate';
 
             return false;
         }
 
         $certs = [];
         if(!openssl_pkcs12_read($pkcs12, $certs, $this->certPass)) {
-            $this->sError = 'Invalid certificate file. Make sure you have a ' .
+            $this->errorMessage = 'Invalid certificate file. Make sure you have a ' .
                 'P12 certificate that also contains a private key, and you ' .
                 'have specified the correct password!';
 
@@ -545,7 +534,7 @@ class PKPass
 
         if(!empty($this->wwdrCertPath)) {
             if(!file_exists($this->wwdrCertPath)) {
-                $this->sError = 'WWDR Intermediate Certificate does not exist';
+                $this->errorMessage = 'WWDR Intermediate Certificate does not exist';
 
                 return false;
             }
@@ -571,14 +560,14 @@ class PKPass
      *
      * @return bool
      */
-    protected function createZip($manifest)
+    protected function createZip($manifest): bool
     {
         $paths = $this->getTempPaths();
 
         // Package file in Zip (as .pkpass)
         $zip = new ZipArchive();
         if(!$zip->open($paths['pkpass'], ZipArchive::CREATE)) {
-            $this->sError = 'Could not open ' . basename($paths['pkpass']) . ' with ZipArchive extension.';
+            $this->errorMessage = 'Could not open ' . basename($paths['pkpass']) . ' with ZipArchive extension.';
 
             return false;
         }
@@ -586,10 +575,10 @@ class PKPass
         $zip->addFromString('manifest.json', $manifest);
         $zip->addFromString('pass.json', $this->json);
 
-        // Add transilation dictionary
+        // Add translation dictionary
         foreach($this->locales as $language => $strings) {
             if(!$zip->addEmptyDir($language . '.lproj')) {
-                $this->sError = 'Could not create ' . $language . '.lproj folder in zip archive.';
+                $this->errorMessage = 'Could not create ' . $language . '.lproj folder in zip archive.';
 
                 return false;
             }
@@ -611,8 +600,9 @@ class PKPass
 
     /**
      * Declares all paths used for temporary files.
+     * @return string[]
      */
-    protected function getTempPaths()
+    protected function getTempPaths(): array
     {
         // Declare base paths
         $paths = [
@@ -646,8 +636,9 @@ class PKPass
 
     /**
      * Removes all temporary files.
+     * @return bool
      */
-    protected function clean()
+    protected function clean(): bool
     {
         $paths = $this->getTempPaths();
 
@@ -665,16 +656,23 @@ class PKPass
         return true;
     }
 
-    protected static $escapeChars = [
+    /**
+     * @var string[]
+     */
+    protected static array $escapeChars = [
         "\n" => "\\n",
         "\r" => "\\r",
         "\"" => "\\\"",
         "\\" => "\\\\"
     ];
+
     /**
      * Escapes strings for use in locale files
+     * @param string $string
+     * @return string
      */
-    protected function escapeLocaleString($string) {
+    protected function escapeLocaleString(string $string): string
+    {
         return strtr($string, self::$escapeChars);
     }
 }

@@ -21,8 +21,10 @@
       }
    ],
    "require": {
-      "php": ">=5.4",
-      "ext-zip": "*"
+      "php": ">=7.4",
+      "ext-zip": "*",
+      "ext-json": "*",
+      "ext-openssl": "*"
    },
    "autoload": {
       "psr-4": {
