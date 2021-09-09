@@ -16,6 +16,7 @@
 
 namespace PKPass;
 
+use Exception;
 use ZipArchive;
 
 /**
@@ -99,22 +100,23 @@ class PKPass
     /**
      * PKPass constructor.
      *
-     * @param string|bool $certPath
-     * @param string|bool $certPass
-     * @param string|bool $JSON
+     * @param string $certPath Path to certificate.p12
+     * @param string $certPass
+     * @param array $JSON
      */
-    public function __construct($certPath = false, $certPass = false, $JSON = false)
+    public function __construct(string $certPath = '', string $certPass = '', array $JSON = [])
     {
         $this->tempPath = sys_get_temp_dir() . '/';  // Must end with slash!
-        $this->wwdrCertPath = __DIR__ . '/Certificate/AppleWWDRCA.pem';
+        $this->wwdrCertPath = __DIR__ . '/Certificate/AppleWWDRCA.pem'; // TODO enable
 
-        if($certPath != false) {
+
+        if(empty($certPath)) {
             $this->setCertificate($certPath);
         }
-        if($certPass != false) {
+        if(empty($certPass)) {
             $this->setCertificatePassword($certPass);
         }
-        if($JSON != false) {
+        if(empty($JSON)) {
             $this->setData($JSON);
         }
     }
@@ -215,13 +217,13 @@ class PKPass
      * @param array $strings key value pair of transilation strings
      *     (default is equal to [])
      * @return bool
+     *
+     * @throws Exception
      */
     public function addLocaleStrings(string $language, array $strings = []): bool
     {
         if(!is_array($strings) || empty($strings)) {
-            $this->errorMessage = "Translation strings empty or not an array";
-
-            return false;
+            throw new Exception('Translation strings empty or not an array');
         }
         $dictionary = "";
         foreach($strings as $key => $value) {
@@ -240,6 +242,7 @@ class PKPass
      * @param string|null $name Filename to use in pass archive
      *     (default is equal to $path)
      * @return bool
+     * @throws Exception
      */
     public function addLocaleFile(string $language, string $path, string $name = null): bool
     {
@@ -250,9 +253,7 @@ class PKPass
             return true;
         }
 
-        $this->errorMessage = sprintf('File %s does not exist.', $path);
-
-        return false;
+        throw new Exception(sprintf('File %s does not exist.', $path));
     }
 
     /**
@@ -262,8 +263,9 @@ class PKPass
      * @param string|null $name Filename to use in pass archive
      *     (default is equal to $path)
      * @return bool
+     * @throws Exception
      */
-    public function addFile(string $path, string $name = null)
+    public function addFile(string $path, string $name = null): bool
     {
         if(file_exists($path)) {
             $name = ($name === null) ? basename($path) : $name;
@@ -272,9 +274,7 @@ class PKPass
             return true;
         }
 
-        $this->errorMessage = sprintf('File %s does not exist.', $path);
-
-        return false;
+        throw new Exception(sprintf('File %s does not exist.', $path));
     }
 
     /**
@@ -398,34 +398,13 @@ class PKPass
 
     /**
      * @param $name
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
-    }
-
-    /**
-     * @param $error
-     *
      * @return bool
      */
-    public function checkError(&$error)
+    public function setName($name): bool
     {
-        if(trim($this->errorMessage) == '') {
-            return false;
-        }
-
-        $error = $this->errorMessage;
+        $this->name = $name;
 
         return true;
-    }
-
-    /**
-     * @return string
-     */
-    public function getError()
-    {
-        return $this->errorMessage;
     }
 
     /**
